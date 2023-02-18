@@ -1,18 +1,7 @@
-class NoResponseError(Exception):
-    """Вызывается если status_code != 200."""
-
-
-class ParseMissStatusError(Exception):
-    """Вызывается при недокументированном статусе домашней работы."""
-
-
-class ListKeyError(Exception):
-    """Неверный ключ словаря."""
-
-
-class NotaListError(Exception):
-    """Не является списком."""
-
-
-class SendMessageError(Exception):
-    """Ошибка при отправке сообщения."""
+class HTTPRequestError(Exception):
+    def __init__(self, response):
+        message = (
+            f'Эндпоинт {response.url} недоступен. '
+            f'Код ответа API: {response.status_code}]'
+        )
+        super().__init__(message)
