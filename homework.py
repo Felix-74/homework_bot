@@ -23,9 +23,9 @@ HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
 HOMEWORK_STATUSES = {
-    'approved': 'Ревью успешно пройден',
-    'reviewing': 'Работа взята в ревью',
-    'rejected': 'В работе есть ошибки. Требуется кое что поправить.'
+    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
+    'reviewing': 'Работа взята на проверку ревьюером.',
+    'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
 
@@ -39,17 +39,17 @@ logger.addHandler(handler)
 
 
 def send_message(bot, message):
-    """Отправка сообщений в Telegram."""
+    """Отправляем сообщение в Telegram."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info(f'Сообщение ушло: {message}')
+        logger.info(f'Сообщение отправлено: {message}')
     except Exception as error:
-        raise SendMessageError(f'Сообщение не ушло: {message} \n'
+        raise SendMessageError(f'Сообщение не отправлено: {message} \n'
                                f'Ошибка: {error}')
 
 
 def get_api_answer(current_timestamp):
-    """Запрос к API Яндекса."""
+    """Запрос к API yandex."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     request_dict = {
@@ -60,14 +60,14 @@ def get_api_answer(current_timestamp):
         **request_dict)
     if response.status_code != HTTPStatus.OK:
         raise NoResponseError(f'Нет ответа от: {ENDPOINT} .'
-                              f'Код: {response.status_code}')
+                              f'Статус код: {response.status_code}')
     response = response.json()
     logger.debug(f' Ответ от API: {response}')
     return response
 
 
 def check_response(response):
-    """Проверяем ответ API  на корректность."""
+    """Ответ API проверяется на корректность."""
     list_homeworks = response['homeworks']
     if not isinstance(list_homeworks, list):
         raise NotaListError(f'{list_homeworks} не является списком')
@@ -78,7 +78,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Проверка статуса домашней работы."""
+    """Проверяем статус домашней работы."""
     homework_name = homework['homework_name']
     homework_status = homework['status']
 

@@ -75,9 +75,9 @@ class MockTelegramBot:
 
 class TestHomework:
     HOMEWORK_STATUSES = {
-        'approved': 'Ревью успешно пройден',
-        'reviewing': 'работа взята в ревью;',
-        'rejected': 'В работе есть ошибки. Требуется кое что поправить.'
+        'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
+        'reviewing': 'Работа взята на проверку ревьюером.',
+        'rejected': 'Работа проверена: у ревьюера есть замечания.'
     }
     ENV_VARS = ['PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'TELEGRAM_CHAT_ID']
     for v in ENV_VARS:
