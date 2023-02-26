@@ -1,4 +1,5 @@
 import logging
+import json
 import os
 import sys
 import time
@@ -8,7 +9,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-from exceptions import HTTPRequestError
+from exceptions import HTTPRequestError, ResponseTypeError, APIRequestError
 
 load_dotenv()
 
@@ -54,7 +55,7 @@ def send_message(bot, message):
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug(f'Бот отправил сообщение {message}')
     except telegram.TelegramError:
-        logger.error('Can not send message')
+        logger.error('Не удается отправить сообщение')
 
 
 def get_api_answer(current_timestamp):
@@ -70,11 +71,16 @@ def get_api_answer(current_timestamp):
             headers=HEADERS,
             params=params
         )
-    except Exception as error:
-        raise Exception(f'{error}')
+    except requests.RequestException:
+        raise APIRequestError(
+            f'API error. Status code: {response.status_code}'
+        )
     if response.status_code != HTTPStatus.OK:
         raise HTTPRequestError(response)
-    return response.json()
+    try:
+        return response.json()
+    except json.decoder.JSONDecodeError:
+        raise ResponseTypeError('API response is of wrong type.')
 
 
 def check_response(response):
@@ -97,8 +103,6 @@ def parse_status(homework):
     homework_status = homework.get('status')
     if 'homework_name' not in homework:
         raise KeyError('Нет ключа "homework_name" в homework')
-    if 'status' not in homework:
-        raise KeyError('Нет ключа "status" в homework')
     if homework_status not in HOMEWORK_VERDICTS:
         raise KeyError('Нет такого статуса')
     verdict = HOMEWORK_VERDICTS[homework_status]
@@ -110,7 +114,7 @@ def main():
     last_status = None
     if not check_tokens():
         logger.critical('Отсутствуют одна или несколько переменных окружения')
-        sys.exit(['Проверьте токены'])
+        sys.exit(1)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     while True:
