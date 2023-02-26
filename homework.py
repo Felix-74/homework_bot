@@ -12,6 +12,16 @@ from exceptions import HTTPRequestError
 
 load_dotenv()
 
+logger = logging.getLogger(f'praktikum_{__name__}_bot')
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(
+    '%(asctime)s (%(name)s:%(lineno)d) [%(levelname)s]: %(message)s'
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
@@ -39,12 +49,12 @@ def check_tokens():
 
 def send_message(bot, message):
     """Отправляет сообщение в Telegram чат."""
-    logging.debug(f'Отправляем сообщение {message}')
+    logger.debug(f'Отправляем сообщение {message}')
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logging.debug(f'Бот отправил сообщение {message}')
-    except Exception as error:
-        logging.error(error)
+        logger.debug(f'Бот отправил сообщение {message}')
+    except telegram.TelegramError:
+        logger.error('Can not send message')
 
 
 def get_api_answer(current_timestamp):
@@ -53,7 +63,7 @@ def get_api_answer(current_timestamp):
     params = {
         'from_date': timestamp
     }
-    logging.info(f'Отправка запроса на {ENDPOINT} с параметрами {params}')
+    logger.info(f'Отправка запроса на {ENDPOINT} с параметрами {params}')
     try:
         response = requests.get(
             url=ENDPOINT,
@@ -99,8 +109,8 @@ def main():
     """Основная логика работы бота."""
     last_status = None
     if not check_tokens():
-        logging.critical('Отсутствуют одна или несколько переменных окружения')
-        exit()
+        logger.critical('Отсутствуют одна или несколько переменных окружения')
+        sys.exit(['Проверьте токены'])
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     while True:
@@ -113,7 +123,7 @@ def main():
                     send_message(bot, message)
                     last_status = message
             else:
-                logging.debug('Ответ API пуст: нет домашних работ.')
+                logger.critical.debug('Ответ API пуст: нет домашних работ.')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             if last_status != message:
@@ -126,9 +136,4 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s [%(levelname)s] %(message)s',
-        stream=sys.stdout
-    )
     main()
