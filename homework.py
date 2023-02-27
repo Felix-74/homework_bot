@@ -115,7 +115,7 @@ def main():
 
     def bot_send_check(message):
         if message != last_status:
-                    return send_message(bot, message)
+            return send_message(bot, message)
     if not check_tokens():
         logger.critical('Отсутствуют одна или несколько переменных окружения')
         sys.exit(1)
