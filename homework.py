@@ -112,6 +112,10 @@ def parse_status(homework):
 def main():
     """Основная логика работы бота."""
     last_status = None
+
+    def bot_send_check(message):
+        if message != last_status:
+                    return send_message(bot, message)
     if not check_tokens():
         logger.critical('Отсутствуют одна или несколько переменных окружения')
         sys.exit(1)
@@ -123,16 +127,12 @@ def main():
             homeworks = check_response(response)
             if homeworks:
                 message = parse_status(homeworks[0])
-                if message != last_status:
-                    send_message(bot, message)
-                    last_status = message
+                bot_send_check(message)
             else:
                 logger.critical.debug('Ответ API пуст: нет домашних работ.')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if last_status != message:
-                send_message(bot, message)
-                last_status = message
+            bot_send_check(message)
         else:
             last_status = None
         finally:
